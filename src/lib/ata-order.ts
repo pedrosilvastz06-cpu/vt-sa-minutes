@@ -32,9 +32,10 @@ export function ordenarPelaOrigem(itens: ItemComOrigem[], totalLinhas: number): 
       contadores = [];
     }
     const profundidade = Math.max(1, entrada.item.numero.split(".").length - 1);
+    const nivelExistente = contadores.length >= profundidade;
     contadores = contadores.slice(0, profundidade);
     while (contadores.length < profundidade) contadores.push(1);
-    if (contadores.length === profundidade && saida.at(-1)?.acao !== "Tópico") {
+    if (nivelExistente) {
       contadores[profundidade - 1] = (contadores[profundidade - 1] ?? 0) + 1;
     }
     const { linhaOrigem: _origem, ...registro } = entrada.item;
