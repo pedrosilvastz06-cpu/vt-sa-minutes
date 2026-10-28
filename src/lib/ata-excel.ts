@@ -87,8 +87,17 @@ export async function gerarExcel(cab: Cabecalho, participantes: Participante[], 
   });
 
   const ultima = ITEM_INI + itens.length - 1;
-  const sobra = Math.max(ITEM_FIM, ultima) - ultima;
-  if (sobra > 0) ws.spliceRows(ultima + 1, sobra);
+  // Wipe leftover template rows completely (values, borders, fills, merges) so no blank block remains.
+  for (let r = ultima + 1; r <= Math.max(ITEM_FIM, ws.rowCount); r++) {
+    tryUnmerge(ws, `C${r}:F${r}`);
+    const row = ws.getRow(r);
+    for (const c of ["A", ...COLS, "J"]) {
+      const cell = ws.getCell(`${c}${r}`);
+      cell.value = null;
+      cell.style = {};
+    }
+    row.height = 15;
+  }
   ws.pageSetup.printArea = `B1:I${ultima}`;
 
   const out = await wb.xlsx.writeBuffer();
