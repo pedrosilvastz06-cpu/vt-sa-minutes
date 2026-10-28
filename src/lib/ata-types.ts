@@ -61,7 +61,7 @@ export function montarItens(corpo: AtaItem[]): AtaItem[] {
     if (partes.length === 1) {
       topo += 1;
       atual = partes[0] ?? "";
-      out.push({ ...it, numero: String(topo), prazo: "N/A", responsavel: "Todos - All" });
+      out.push({ ...it, assunto: padronizarSiglas(tituloCase(it.assunto)), numero: String(topo), prazo: "N/A", responsavel: "Todos - All" });
     } else {
       const resto = partes.slice(1);
       out.push({ ...it, numero: [String(topo), ...resto].join(".") });
@@ -82,11 +82,31 @@ export function pendenciasAbertas(itens: AtaItem[]) {
 /** Company/partner acronyms that must always appear in uppercase. */
 export const SIGLAS_MAIUSCULAS = ["CFTI", "ORCA", "FGA", "SADA", "HS", "VT-SA", "VT-DE"];
 
+/** Equipment names that must always be written with capitalized words. */
+export const EQUIPAMENTOS = ["Tube Bundle Dryer", "Ring Dryer", "Flash Dryer", "Belt Dryer", "Rotary Dryer", "Screw Press", "Decanter", "Evaporator"];
+
 export function padronizarSiglas(texto: string): string {
   let out = texto;
-  for (const s of SIGLAS_MAIUSCULAS) {
-    const esc = s;
+  for (const s of [...EQUIPAMENTOS, ...SIGLAS_MAIUSCULAS]) {
+    const esc = s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s+");
     out = out.replace(new RegExp(`(?<![\\p{L}\\p{N}])${esc}(?![\\p{L}\\p{N}])`, "giu"), s);
   }
   return out;
+}
+
+const MINUSCULAS = new Set(["de", "da", "do", "das", "dos", "e", "em", "na", "no", "nas", "nos", "a", "o", "as", "os", "para", "com", "por", "ao", "à", "of", "the", "and", "for", "to", "in", "on", "at", "by", "with", "or"]);
+
+/** Title case for topic titles: "pedido de compra da unidade #71" -> "Pedido de Compra da Unidade #71". */
+export function tituloCase(texto: string): string {
+  return texto
+    .split(/(\s+)/)
+    .map((w, i) => {
+      if (/^\s+$/.test(w) || !w) return w;
+      if (/[A-Z].*[A-Z]|\d|#/.test(w)) return w; // acronyms, numbers
+      const low = w.toLocaleLowerCase("pt-BR");
+      const anterior = texto.split(/\s+/)[Math.max(0, Math.floor(i / 2) - 1)] ?? "";
+      if (i > 0 && MINUSCULAS.has(low) && anterior !== "-") return low;
+      return low.charAt(0).toLocaleUpperCase("pt-BR") + low.slice(1);
+    })
+    .join("");
 }
