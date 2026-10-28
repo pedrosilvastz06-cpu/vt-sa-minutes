@@ -8,9 +8,9 @@ describe("regras da ata", () => {
 
   it("adiciona Abertura (1) e Encerramento ao final", () => {
     const r = montarItens([{ numero: "2", assunto: "X", acao: "Tópico", prazo: null, responsavel: null }]);
-    expect(r[0].assunto).toBe("Abertura - Opening");
-    expect(r[1].numero).toBe("2");
+    expect(r[0]?.assunto).toBe("Abertura - Opening");
+    expect(r[1]?.numero).toBe("2");
     expect(r[2]).toMatchObject({ numero: "3", assunto: "Encerramento - Closing" });
-    expect(r[3].numero).toBe("3.1");
+    expect(r[3]?.numero).toBe("3.1");
   });
 });

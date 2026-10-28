@@ -15,7 +15,7 @@ const COLS = ["B", "C", "D", "E", "F", "G", "H", "I"];
 function parseData(s: string | null): Date | string {
   if (!s) return "";
   const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+  if (m) return new Date(Date.UTC(+m[3]!, +m[2]! - 1, +m[1]!));
   return s;
 }
 
@@ -31,7 +31,7 @@ export async function gerarExcel(cab: Cabecalho, participantes: Participante[], 
   const buf = await (await fetch("/modelo-ata.xlsx")).arrayBuffer();
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(buf);
-  const ws = wb.worksheets[0];
+  const ws = wb.worksheets[0]!;
 
   // Header
   ws.getCell("D4").value = cab.cliente;
@@ -42,7 +42,7 @@ export async function gerarExcel(cab: Cabecalho, participantes: Participante[], 
   ws.getCell("H6").value = cab.horaInicio;
   ws.getCell("H7").value = cab.horaTermino;
   if (cab.data) {
-    const [y, m, d] = cab.data.split("-").map(Number);
+    const [y = 0, m = 1, d = 1] = cab.data.split("-").map(Number);
     ws.getCell("H4").value = new Date(Date.UTC(y, m - 1, d));
   }
 
@@ -74,7 +74,7 @@ export async function gerarExcel(cab: Cabecalho, participantes: Participante[], 
   itens.forEach((it, i) => {
     const r = ITEM_INI + i;
     const st = modelos[it.acao];
-    for (const c of COLS) ws.getCell(`${c}${r}`).style = structuredClone(st[c]);
+    for (const c of COLS) ws.getCell(`${c}${r}`).style = structuredClone(st[c] ?? {});
     const isTopo = !it.numero.includes(".");
     ws.getCell(`B${r}`).value = isTopo ? Number(it.numero) : it.numero;
     ws.getCell(`C${r}`).value = it.assunto;

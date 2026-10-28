@@ -44,7 +44,7 @@ export async function gerarAta(input: {
   dataReuniao: string;
   signal?: AbortSignal;
 }): Promise<GerarResultado> {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("A chave da IA não está configurada.");
   const runIdFetch = createLovableAiGatewayRunIdFetch();
   const provider = createOpenAI({

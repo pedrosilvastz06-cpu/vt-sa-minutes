@@ -44,7 +44,7 @@ export const ENCERRAMENTO_TEXTO =
 
 /** Adds one week to a yyyy-mm-dd meeting date and returns dd/mm/aaaa. */
 export function prazoPadrao(dataReuniao: string): string {
-  const [y, m, d] = dataReuniao.split("-").map(Number);
+  const [y = 0, m = 1, d = 1] = dataReuniao.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d + 7));
   const p = (n: number) => String(n).padStart(2, "0");
   return `${p(dt.getUTCDate())}/${p(dt.getUTCMonth() + 1)}/${dt.getUTCFullYear()}`;
@@ -59,10 +59,10 @@ export function montarItens(corpo: AtaItem[]): AtaItem[] {
     const partes = it.numero.split(".");
     if (partes.length === 1) {
       topo += 1;
-      atual = partes[0];
+      atual = partes[0] ?? "";
       out.push({ ...it, numero: String(topo), prazo: "N/A", responsavel: "Todos - All" });
     } else {
-      const resto = partes[0] === atual ? partes.slice(1) : partes.slice(1);
+      const resto = partes.slice(1);
       out.push({ ...it, numero: [String(topo), ...resto].join(".") });
     }
   }

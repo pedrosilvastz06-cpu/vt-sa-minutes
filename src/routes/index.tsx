@@ -87,7 +87,10 @@ function Index() {
   }
 
   async function onGerar() {
-    if (!anotacoes.trim()) return toast.error("Cole ou anexe suas anotações primeiro.");
+    if (!anotacoes.trim()) {
+      toast.error("Cole ou anexe suas anotações primeiro.");
+      return;
+    }
     setCarregando(true);
     try {
       const r = await gerar({
