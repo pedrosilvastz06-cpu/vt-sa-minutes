@@ -62,6 +62,7 @@ export async function gerarExcel(cab: Cabecalho, participantes: Participante[], 
 
   for (let r = ITEM_INI; r <= ITEM_FIM; r++) {
     tryUnmerge(ws, `C${r}:F${r}`);
+    ws.getCell(`A${r}`).value = null;
     for (const c of COLS) ws.getCell(`${c}${r}`).value = null;
   }
 
