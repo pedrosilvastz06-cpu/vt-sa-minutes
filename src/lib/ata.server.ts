@@ -25,7 +25,7 @@ Transforme as anotações (fonte principal) e, se houver, a transcrição (fonte
 
 REGRAS OBRIGATÓRIAS
 - NÃO inclua "Abertura" nem "Encerramento": o sistema adiciona automaticamente. Comece a numeração dos tópicos em 2.
-- Ordem cronológica dos assuntos.
+- Mantenha EXATAMENTE a ordem em que os assuntos aparecem nas anotações (ordem cronológica anotada). Não reordene, não agrupe assuntos de partes diferentes e não mova registros entre tópicos. Cada novo assunto nas anotações vira um novo tópico na mesma sequência.
 - Numeração hierárquica: tópico "2"; registros "2.1", "2.2"; respostas/desdobramentos "2.1.1", "2.1.2".
 - Cada tópico (numero sem ponto) tem acao "Tópico", assunto curto como título, prazo "N/A", responsavel "Todos - All".
 - Registros: acao "Informativo" (algo dito, informado, decidido) ou "Tarefa Pendente" (alguém se comprometeu a fazer algo).
