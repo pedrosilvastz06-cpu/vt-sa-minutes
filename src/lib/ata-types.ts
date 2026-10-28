@@ -55,7 +55,8 @@ export function montarItens(corpo: AtaItem[]): AtaItem[] {
   const out: AtaItem[] = [ABERTURA];
   let topo = 1;
   let atual = "";
-  for (const it of corpo) {
+  for (const bruto of corpo) {
+    const it = { ...bruto, assunto: padronizarSiglas(bruto.assunto), responsavel: bruto.responsavel && padronizarSiglas(bruto.responsavel) };
     const partes = it.numero.split(".");
     if (partes.length === 1) {
       topo += 1;
@@ -76,4 +77,16 @@ export function pendenciasAbertas(itens: AtaItem[]) {
   return itens.filter(
     (i) => i.acao === "Tarefa Pendente" && (!i.prazo || i.prazo === CONFIRMAR_PRAZO || !i.responsavel || i.responsavel === CONFIRMAR_RESPONSAVEL),
   );
+}
+
+/** Company/partner acronyms that must always appear in uppercase. */
+export const SIGLAS_MAIUSCULAS = ["CFTI", "ORCA", "FGA", "SADA", "HS", "VT-SA", "VT-DE"];
+
+export function padronizarSiglas(texto: string): string {
+  let out = texto;
+  for (const s of SIGLAS_MAIUSCULAS) {
+    const esc = s.replace(/[-]/g, "\\-");
+    out = out.replace(new RegExp(`(?<![\\p{L}\\p{N}])${esc}(?![\\p{L}\\p{N}])`, "giu"), s);
+  }
+  return out;
 }

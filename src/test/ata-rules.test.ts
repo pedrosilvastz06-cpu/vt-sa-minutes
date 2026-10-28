@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { montarItens, prazoPadrao } from "@/lib/ata-types";
+import { montarItens, padronizarSiglas, prazoPadrao } from "@/lib/ata-types";
 
 describe("regras da ata", () => {
   it("prazo padrão é uma semana após a reunião", () => {
@@ -12,5 +12,10 @@ describe("regras da ata", () => {
     expect(r[1]?.numero).toBe("2");
     expect(r[2]).toMatchObject({ numero: "3", assunto: "Encerramento - Closing" });
     expect(r[3]?.numero).toBe("3.1");
+  });
+
+  it("deixa as siglas da empresa em maiúsculas", () => {
+    expect(padronizarSiglas("cfti, orca, fga, grupo sada, hs-negócios, vt-sa e vt-de")).toBe("CFTI, ORCA, FGA, grupo SADA, HS-negócios, VT-SA e VT-DE");
+    expect(padronizarSiglas("hoje a orcamento")).toBe("hoje a orcamento");
   });
 });
