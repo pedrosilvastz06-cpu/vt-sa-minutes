@@ -60,18 +60,18 @@ export async function gerarExcel(cab: Cabecalho, participantes: Participante[], 
   const estilo = (row: number) => Object.fromEntries(COLS.map((c) => [c, structuredClone(ws.getCell(`${c}${row}`).style)]));
   const modelos = { "Tópico": estilo(46), Informativo: estilo(47), "Tarefa Pendente": estilo(49) } as const;
 
-  for (let r = ITEM_INI + 1; r <= ITEM_FIM; r++) {
+  for (let r = ITEM_INI; r <= ITEM_FIM; r++) {
     tryUnmerge(ws, `C${r}:F${r}`);
     for (const c of COLS) ws.getCell(`${c}${r}`).value = null;
   }
 
-  const capacidade = ITEM_FIM - ITEM_INI;
+  const capacidade = ITEM_FIM - ITEM_INI + 1;
   if (itens.length > capacidade) {
     ws.duplicateRow(ITEM_FIM, itens.length - capacidade, true);
   }
 
   itens.forEach((it, i) => {
-    const r = ITEM_INI + 1 + i;
+    const r = ITEM_INI + i;
     const st = modelos[it.acao];
     for (const c of COLS) ws.getCell(`${c}${r}`).style = structuredClone(st[c]);
     const isTopo = !it.numero.includes(".");
@@ -85,8 +85,8 @@ export async function gerarExcel(cab: Cabecalho, participantes: Participante[], 
     ws.getRow(r).height = Math.max(isTopo ? 20 : 30, linhas * 15 + 6);
   });
 
-  const ultima = ITEM_INI + itens.length;
-  const sobra = Math.max(ITEM_FIM, ITEM_INI + itens.length) - ultima;
+  const ultima = ITEM_INI + itens.length - 1;
+  const sobra = Math.max(ITEM_FIM, ultima) - ultima;
   if (sobra > 0) ws.spliceRows(ultima + 1, sobra);
   ws.pageSetup.printArea = `B1:I${ultima}`;
 
