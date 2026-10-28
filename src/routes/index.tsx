@@ -225,54 +225,44 @@ function Index() {
                 <TabsTrigger value="texto">Texto corrido</TabsTrigger>
               </TabsList>
               <TabsContent value="tabela">
-                <div className="overflow-x-auto rounded-md border bg-card">
-                  <table className="w-full min-w-[760px] text-sm">
-                    <thead className="bg-secondary text-left text-xs uppercase tracking-wide text-secondary-foreground">
-                      <tr><th className="p-2 w-16">Item</th><th className="p-2">Assunto</th><th className="p-2 w-40">Ação</th><th className="p-2 w-32">Prazo</th><th className="p-2 w-40">Responsável</th><th className="p-2 w-20"></th></tr>
-                    </thead>
-                    <tbody>
-                      {itens.map((it, i) => {
-                        const topo = it.acao === "Tópico";
-                        return (
-                          <tr key={i} className={`border-t align-top ${topo ? "bg-topic font-semibold" : it.acao === "Tarefa Pendente" ? "bg-pending/60" : ""}`}>
-                            <td className="p-2 font-mono text-xs">{it.numero}</td>
-                            <td className="p-1"><Textarea rows={topo ? 1 : 3} className="min-h-0 resize-y border-transparent bg-transparent shadow-none focus-visible:border-input" value={it.assunto} onChange={(e) => upd(i, { assunto: e.target.value })} /></td>
-                            <td className="p-1">
-                              <select className="w-full rounded-md border border-input bg-background p-2" value={it.acao} onChange={(e) => {
-                                const acao = e.target.value as Acao;
-                                setItens((l) => renumerar(l!.map((x, j) => (j !== i ? x : {
-                                  ...x,
-                                  acao,
-                                  numero: acao === "Tópico" ? "1" : x.acao === "Tópico" ? "1.1" : x.numero,
-                                  prazo: acao === "Tarefa Pendente" ? (x.prazo === "N/A" ? null : x.prazo) : "N/A",
-                                  responsavel: acao === "Tópico" ? "Todos - All" : x.responsavel,
-                                }))));
-                              }}>
-                                <option>Tópico</option>
-                                <option>Informativo</option>
-                                <option>Tarefa Pendente</option>
-                              </select>
-                            </td>
-                            <td className="p-1">
-                              {it.acao === "Tarefa Pendente" ? (
-                                <Input value={it.prazo ?? ""} placeholder={CONFIRMAR_PRAZO} className={!it.prazo ? "border-destructive" : ""} onChange={(e) => upd(i, { prazo: e.target.value || null })} />
-                              ) : <span className="block p-2 text-muted-foreground">N/A</span>}
-                            </td>
-                            <td className="p-1">
-                              <Input value={it.responsavel ?? ""} placeholder="[CONFIRMAR RESPONSÁVEL]" className={!it.responsavel ? "border-destructive" : ""} onChange={(e) => upd(i, { responsavel: e.target.value || null })} />
-                            </td>
-                            <td className="p-1 whitespace-nowrap">
-                              <Button variant="ghost" size="icon" aria-label="Adicionar linha abaixo" title="Adicionar linha abaixo" onClick={() => setItens((l) => {
-                                const nova: AtaItem = { numero: topo ? `${it.numero}.1` : it.numero, assunto: "", acao: "Informativo", prazo: "N/A", responsavel: null };
-                                return renumerar([...l!.slice(0, i + 1), nova, ...l!.slice(i + 1)]);
-                              })}><Plus /></Button>
-                              <Button variant="ghost" size="icon" aria-label="Remover linha" title="Remover linha" onClick={() => setItens((l) => renumerar(l!.filter((_, j) => j !== i)))}><Trash2 /></Button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                <div className="grid gap-2">
+                  {itens.map((it, i) => {
+                    const topo = it.acao === "Tópico";
+                    const linhas = Math.max(topo ? 1 : 2, it.assunto.split("\n").reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 70)), 0));
+                    return (
+                      <div key={i} className={`rounded-md border p-2 ${topo ? "bg-topic font-semibold" : it.acao === "Tarefa Pendente" ? "bg-pending/60" : "bg-card"}`}>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="w-12 font-mono text-xs">{it.numero}</span>
+                          <select aria-label="Ação" className="rounded-md border border-input bg-background p-2 text-sm font-normal" value={it.acao} onChange={(e) => {
+                            const acao = e.target.value as Acao;
+                            setItens((l) => renumerar(l!.map((x, j) => (j !== i ? x : {
+                              ...x,
+                              acao,
+                              numero: acao === "Tópico" ? "1" : x.acao === "Tópico" ? "1.1" : x.numero,
+                              prazo: acao === "Tarefa Pendente" ? (x.prazo === "N/A" ? null : x.prazo) : "N/A",
+                              responsavel: acao === "Tópico" ? "Todos - All" : x.responsavel,
+                            }))));
+                          }}>
+                            <option>Tópico</option>
+                            <option>Informativo</option>
+                            <option>Tarefa Pendente</option>
+                          </select>
+                          {it.acao === "Tarefa Pendente" && (
+                            <Input aria-label="Prazo" value={it.prazo ?? ""} placeholder={CONFIRMAR_PRAZO} className={`w-36 font-normal ${!it.prazo ? "border-destructive" : ""}`} onChange={(e) => upd(i, { prazo: e.target.value || null })} />
+                          )}
+                          <Input aria-label="Responsável" value={it.responsavel ?? ""} placeholder="[CONFIRMAR RESPONSÁVEL]" className={`w-44 font-normal ${!it.responsavel ? "border-destructive" : ""}`} onChange={(e) => upd(i, { responsavel: e.target.value || null })} />
+                          <div className="ml-auto flex">
+                            <Button variant="outline" size="sm" title="Adicionar linha abaixo" onClick={() => setItens((l) => {
+                              const nova: AtaItem = { numero: topo ? `${it.numero}.1` : it.numero, assunto: "", acao: "Informativo", prazo: "N/A", responsavel: null };
+                              return renumerar([...l!.slice(0, i + 1), nova, ...l!.slice(i + 1)]);
+                            })}><Plus /> Linha</Button>
+                            <Button variant="ghost" size="icon" aria-label="Remover linha" title="Remover linha" onClick={() => setItens((l) => renumerar(l!.filter((_, j) => j !== i)))}><Trash2 /></Button>
+                          </div>
+                        </div>
+                        <Textarea aria-label="Assunto" rows={linhas} className="mt-2 min-h-0 resize-y bg-background" value={it.assunto} onChange={(e) => upd(i, { assunto: e.target.value })} />
+                      </div>
+                    );
+                  })}
                 </div>
               </TabsContent>
               <TabsContent value="texto">
