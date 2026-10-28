@@ -25,18 +25,20 @@ Transforme as anotações (fonte principal) e, se houver, a transcrição (fonte
 
 REGRAS OBRIGATÓRIAS
 - NÃO inclua "Abertura" nem "Encerramento": o sistema adiciona automaticamente. Comece a numeração dos tópicos em 2.
+- COMPLETUDE (prioridade máxima): TODA informação, frase, pergunta, resposta, decisão, número, data e tarefa das anotações deve aparecer na ata. Não resuma, não omita, não descarte nada por parecer pouco importante. Antes de responder, confira linha por linha das anotações se cada uma virou um registro. Se uma linha tiver mais de um fato, crie um registro para cada.
 - Mantenha EXATAMENTE a ordem em que os assuntos aparecem nas anotações (ordem cronológica anotada). Não reordene, não agrupe assuntos de partes diferentes e não mova registros entre tópicos. Cada novo assunto nas anotações vira um novo tópico na mesma sequência.
 - Numeração hierárquica: tópico "2"; registros "2.1", "2.2"; respostas/desdobramentos "2.1.1", "2.1.2".
-- Cada tópico (numero sem ponto) tem acao "Tópico", assunto curto como título, prazo "N/A", responsavel "Todos - All".
+- Cada tópico (numero sem ponto) tem acao "Tópico", prazo "N/A", responsavel "Todos - All" e assunto no formato "Título em Português - Title in English", com a inicial de cada palavra em maiúscula (exceto artigos/preposições), ex.: "Pedido de Compra da Unidade #71 - Purchase Order for Unit #71".
 - Registros: acao "Informativo" (algo dito, informado, decidido) ou "Tarefa Pendente" (alguém se comprometeu a fazer algo).
 - Informativo: prazo "N/A"; responsavel = quem falou (primeiro nome, como nas anotações).
 - Tarefa Pendente: prazo no formato dd/mm/aaaa se foi informado; se NÃO foi informado, prazo null (nunca invente). responsavel = quem executará; se não estiver claro, null.
-- Escreva no estilo formal da empresa, em terceira pessoa e no pretérito: "Paul informou que...", "Fábio solicitou a Paul que...", "Paul confirmou que enviará...".
-- Melhore o português das anotações: corrija gramática, ortografia e pontuação, deixando o texto profissional, claro e objetivo, sem distorcer o sentido.
+- REESCRITA PROFISSIONAL (obrigatória): NÃO copie as anotações literalmente. Reescreva cada registro em português formal, gramaticalmente correto (concordância, regência, crase, pontuação e acentuação), claro e objetivo, em terceira pessoa e no pretérito: "Paul informou que...", "Fábio solicitou a Paul que...", "Paul confirmou que enviará...". Elimine gírias, abreviações informais ("vc", "pq", "tb", "msg"), repetições e frases truncadas. Não distorça o sentido.
+- INGLÊS: em todo registro (não tópico), o assunto tem DUAS linhas separadas por "\\n": 1ª linha em português; 2ª linha a versão em inglês americano natural, como um profissional dos Estados Unidos escreveria (não tradução literal), com gramática, ortografia e pontuação 100% corretas do inglês dos EUA. Ex.: "Paul informou que enviará o desenho até sexta-feira.\\nPaul stated that he will send the drawing by Friday."
 - Escreva sempre em MAIÚSCULAS as siglas: CFTI, ORCA, FGA, SADA, HS, VT-SA, VT-DE (ex.: "HS-Negócios", "Grupo SADA").
-- Preserve exatamente nomes de pessoas, empresas, equipamentos, números de unidades (#51, #61), termos técnicos e siglas.
-- Nunca invente informações, decisões, responsáveis ou prazos. Não altere o sentido. Evite repetições excessivas.
-- textoCorrido: a ata em texto corrido, em parágrafos por tópico, para revisão de clareza e fidelidade.
+- Nomes de equipamentos em inglês ficam com a inicial de cada palavra maiúscula e não são traduzidos: "Ring Dryer", "Tube Bundle Dryer", "Flash Dryer", "Screw Press", etc.
+- Preserve exatamente nomes de pessoas, empresas, números de unidades (#51, #61), termos técnicos e siglas.
+- Nunca invente informações, decisões, responsáveis ou prazos.
+- textoCorrido: a ata em texto corrido, em parágrafos por tópico, só em português, para revisão de clareza e fidelidade.
 - alertas: lista curta de informações ausentes, duvidosas ou conflitantes que o usuário deve confirmar (ex.: prazo não informado no item 3.1.1). Lista vazia se nada.`;
 
 export async function gerarAta(input: {
@@ -74,7 +76,7 @@ ${input.transcricao || "(sem transcrição)"}`;
     providerOptions: {
       openai: {
         forceReasoning: true,
-        reasoningEffort: "medium",
+        reasoningEffort: "high",
         reasoningSummary: "auto",
         store: false,
         include: ["reasoning.encrypted_content"],

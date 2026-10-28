@@ -19,3 +19,22 @@ describe("regras da ata", () => {
     expect(padronizarSiglas("hoje a orcamento")).toBe("hoje a orcamento");
   });
 });
+
+import { renumerar, tituloCase } from "@/lib/ata-types";
+describe("ajustes", () => {
+  it("títulos com inicial maiúscula", () => {
+    expect(tituloCase("pedido de compra da unidade #71")).toBe("Pedido de Compra da Unidade #71");
+  });
+  it("equipamentos capitalizados", () => {
+    expect(padronizarSiglas("o ring dryer e o tube bundle dryer")).toBe("o Ring Dryer e o Tube Bundle Dryer");
+  });
+  it("renumera após inserir linha", () => {
+    const r = renumerar([
+      { numero: "1", assunto: "A", acao: "Tópico", prazo: "N/A", responsavel: "x" },
+      { numero: "1.1", assunto: "b", acao: "Informativo", prazo: "N/A", responsavel: "x" },
+      { numero: "1.1", assunto: "c", acao: "Informativo", prazo: "N/A", responsavel: "x" },
+      { numero: "9", assunto: "D", acao: "Tópico", prazo: "N/A", responsavel: "x" },
+    ]);
+    expect(r.map((i) => i.numero)).toEqual(["1", "1.1", "1.2", "2"]);
+  });
+});
