@@ -85,7 +85,7 @@ export const SIGLAS_MAIUSCULAS = ["CFTI", "ORCA", "FGA", "SADA", "HS", "VT-SA", 
 export function padronizarSiglas(texto: string): string {
   let out = texto;
   for (const s of SIGLAS_MAIUSCULAS) {
-    const esc = s.replace(/[-]/g, "\\-");
+    const esc = s;
     out = out.replace(new RegExp(`(?<![\\p{L}\\p{N}])${esc}(?![\\p{L}\\p{N}])`, "giu"), s);
   }
   return out;
