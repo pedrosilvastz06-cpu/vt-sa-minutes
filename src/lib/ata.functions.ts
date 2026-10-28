@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 export const gerarAtaFn = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     z.object({
       anotacoes: z.string().min(1).max(200000),
       transcricao: z.string().max(400000),
