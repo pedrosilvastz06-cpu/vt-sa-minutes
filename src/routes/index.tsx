@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { IDIOMAS, TEXTOS, type Idioma } from "@/lib/i18n";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Download, FileUp, Loader2, Plus, Sparkles, Trash2, Copy, CalendarClock } from "lucide-react";
@@ -25,9 +26,9 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Gerador de Atas VT-SA" },
+      { title: "VT-SA Minutes" },
       { name: "description", content: "Transforme anotações de reunião em atas no modelo Excel da VetterTec." },
-      { property: "og:title", content: "Gerador de Atas VT-SA" },
+      { property: "og:title", content: "VT-SA Minutes" },
       { property: "og:description", content: "Transforme anotações de reunião em atas no modelo Excel da VetterTec." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -58,6 +59,16 @@ async function lerArquivo(file: File): Promise<string> {
 
 function Index() {
   const gerar = useServerFn(gerarAtaFn);
+  const [idioma, setIdioma] = useState<Idioma>("pt");
+  useEffect(() => {
+    const salvo = localStorage.getItem("idioma") as Idioma | null;
+    if (salvo && salvo in TEXTOS) setIdioma(salvo);
+  }, []);
+  useEffect(() => {
+    document.documentElement.lang = { pt: "pt-BR", en: "en-US", de: "de", da: "da", es: "es" }[idioma];
+  }, [idioma]);
+  const t = TEXTOS[idioma];
+  const rotuloAcao = (a: Acao) => (a === "Tópico" ? t.topico : a === "Informativo" ? t.informativo : t.tarefa);
   const [cab, setCab] = useState<Cabecalho>({
     cliente: "VetterTec",
     projeto: "",
@@ -90,7 +101,7 @@ function Index() {
 
   async function onGerar() {
     if (!anotacoes.trim()) {
-      toast.error("Cole ou anexe suas anotações primeiro.");
+      toast.error(t.erroSemAnotacoes);
       return;
     }
     setCarregando(true);
@@ -106,9 +117,9 @@ function Index() {
       setItens(montarItens(r.itens));
       setTexto(padronizarSiglas(r.textoCorrido));
       setAlertas(r.alertas);
-      toast.success("Ata organizada. Revise antes de baixar.");
+      toast.success(t.sucesso);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Não foi possível gerar a ata.");
+      toast.error(err instanceof Error ? err.message : t.erroGerar);
     } finally {
       setCarregando(false);
     }
@@ -122,12 +133,12 @@ function Index() {
   function aplicarPrazoPadrao() {
     const p = prazoPadrao(cab.data);
     setItens((l) => l!.map((it) => (it.acao === "Tarefa Pendente" && (!it.prazo || it.prazo === CONFIRMAR_PRAZO) ? { ...it, prazo: p } : it)));
-    toast.success(`Prazo padrão de 1 semana aplicado (${p}).`);
+    toast.success(t.prazoAplicado(p));
   }
 
   async function baixar() {
     if (!itens) return;
-    if (abertas > 0 && !confirm(`Há ${abertas} tarefa(s) pendente(s) sem prazo ou responsável. Baixar mesmo assim?`)) return;
+    if (abertas > 0 && !confirm(t.confirmarBaixar(abertas))) return;
     setBaixando(true);
     try {
       const { gerarExcel } = await import("@/lib/ata-excel");
@@ -139,7 +150,7 @@ function Index() {
       a.click();
       URL.revokeObjectURL(a.href);
     } catch (e) {
-      toast.error("Erro ao montar o Excel.");
+      toast.error(t.erroExcel);
       console.error(e);
     } finally {
       setBaixando(false);
@@ -152,68 +163,73 @@ function Index() {
         <div className="mx-auto flex max-w-6xl items-end justify-between gap-4 px-6 py-6">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">VetterTec South America</p>
-            <h1 className="font-display text-3xl font-extrabold tracking-tight">Gerador de Atas VT-SA</h1>
+            <h1 className="font-display text-3xl font-extrabold tracking-tight">VT-SA Minutes</h1>
           </div>
-          <p className="hidden max-w-xs text-right text-sm opacity-80 sm:block">Anotações → ata no modelo Excel da empresa.</p>
+          <div className="flex flex-col items-end gap-2">
+            <select aria-label={t.idioma} className="rounded-md border border-primary-foreground/30 bg-primary p-1.5 text-sm text-primary-foreground" value={idioma} onChange={(e) => { const v = e.target.value as Idioma; setIdioma(v); localStorage.setItem("idioma", v); }}>
+              {IDIOMAS.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
+            </select>
+            <p className="hidden max-w-xs text-right text-sm opacity-80 sm:block">{t.subtitulo}</p>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto grid max-w-6xl gap-6 px-6 py-8">
-        <Secao n="1" titulo="Dados da reunião">
+        <Secao n="1" titulo={t.dadosReuniao}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Campo label="Cliente"><Input value={cab.cliente} onChange={setC("cliente")} /></Campo>
-            <Campo label="Projeto" className="sm:col-span-2 lg:col-span-3"><Input value={cab.projeto} onChange={setC("projeto")} placeholder="Ex.: STARCHCANE® - Grupo SADA - #51, #61" /></Campo>
-            <Campo label="Local"><Input value={cab.local} onChange={setC("local")} /></Campo>
-            <Campo label="Elaboração"><Input value={cab.elaboracao} onChange={setC("elaboracao")} /></Campo>
-            <Campo label="Data"><Input type="date" value={cab.data} onChange={setC("data")} /></Campo>
-            <Campo label="Doc. Nº"><Input value={cab.docNumero} onChange={setC("docNumero")} placeholder="088-26-0" /></Campo>
-            <Campo label="Hora início"><Input type="time" value={cab.horaInicio} onChange={setC("horaInicio")} /></Campo>
-            <Campo label="Hora término"><Input type="time" value={cab.horaTermino} onChange={setC("horaTermino")} /></Campo>
+            <Campo label={t.cliente}><Input value={cab.cliente} onChange={setC("cliente")} /></Campo>
+            <Campo label={t.projeto} className="sm:col-span-2 lg:col-span-3"><Input value={cab.projeto} onChange={setC("projeto")} placeholder="Ex.: STARCHCANE® - Grupo SADA - #51, #61" /></Campo>
+            <Campo label={t.local}><Input value={cab.local} onChange={setC("local")} /></Campo>
+            <Campo label={t.elaboracao}><Input value={cab.elaboracao} onChange={setC("elaboracao")} /></Campo>
+            <Campo label={t.data}><Input type="date" value={cab.data} onChange={setC("data")} /></Campo>
+            <Campo label={t.docNumero}><Input value={cab.docNumero} onChange={setC("docNumero")} placeholder="088-26-0" /></Campo>
+            <Campo label={t.horaInicio}><Input type="time" value={cab.horaInicio} onChange={setC("horaInicio")} /></Campo>
+            <Campo label={t.horaTermino}><Input type="time" value={cab.horaTermino} onChange={setC("horaTermino")} /></Campo>
           </div>
 
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between">
-              <Label className="text-sm font-semibold">Participantes</Label>
+              <Label className="text-sm font-semibold">{t.participantes}</Label>
               <Button variant="outline" size="sm" onClick={() => setParts([...parts, { nome: "", empresa: "", email: "", visto: "Presente - Present" }])}>
-                <Plus /> Adicionar
+                <Plus /> {t.adicionar}
               </Button>
             </div>
             <div className="grid gap-2">
               {parts.map((p, i) => (
                 <div key={i} className="grid grid-cols-[1fr_auto] gap-2 sm:grid-cols-[1fr_2fr_1.4fr_1.3fr_auto]">
-                  <Input value={p.nome} placeholder="Nome" onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, nome: e.target.value } : x)))} />
-                  <Input className="hidden sm:block" value={p.empresa} placeholder="Empresa - cargo" onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, empresa: e.target.value } : x)))} />
-                  <Input className="hidden sm:block" value={p.email} placeholder="E-mail" onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))} />
-                  <Input className="hidden sm:block" value={p.visto} placeholder="Visto" onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, visto: e.target.value } : x)))} />
-                  <Button variant="ghost" size="icon" aria-label="Remover participante" onClick={() => setParts(parts.filter((_, j) => j !== i))}><Trash2 /></Button>
+                  <Input value={p.nome} placeholder={t.nome} onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, nome: e.target.value } : x)))} />
+                  <Input className="hidden sm:block" value={p.empresa} placeholder={t.empresaCargo} onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, empresa: e.target.value } : x)))} />
+                  <Input className="hidden sm:block" value={p.email} placeholder={t.email} onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, email: e.target.value } : x)))} />
+                  <Input className="hidden sm:block" value={p.visto} placeholder={t.visto} onChange={(e) => setParts(parts.map((x, j) => (j === i ? { ...x, visto: e.target.value } : x)))} />
+                  <Button variant="ghost" size="icon" aria-label={t.removerParticipante} onClick={() => setParts(parts.filter((_, j) => j !== i))}><Trash2 /></Button>
                 </div>
               ))}
             </div>
           </div>
         </Secao>
 
-        <Secao n="2" titulo="Anotações">
+        <Secao n="2" titulo={t.anotacoes}>
           <div className="grid gap-4 lg:grid-cols-2">
-            <Fonte label="Minhas anotações (principal)" valor={anotacoes} set={setAnotacoes} onFile={(e) => anexar(e, "anotacoes")} placeholder="Cole aqui suas anotações livres..." />
-            <Fonte label="Transcrição Read AI (opcional)" valor={transcricao} set={setTranscricao} onFile={(e) => anexar(e, "transcricao")} placeholder="Use só se as anotações não forem suficientes." />
+            <Fonte label={t.minhasAnotacoes} anexarTxt={t.anexar} valor={anotacoes} set={setAnotacoes} onFile={(e) => anexar(e, "anotacoes")} placeholder={t.phAnotacoes} />
+            <Fonte label={t.transcricao} anexarTxt={t.anexar} valor={transcricao} set={setTranscricao} onFile={(e) => anexar(e, "transcricao")} placeholder={t.phTranscricao} />
           </div>
           <Button size="lg" className="mt-5 w-full sm:w-auto" onClick={onGerar} disabled={carregando}>
-            {carregando ? <Loader2 className="animate-spin" /> : <Sparkles />} {carregando ? "Organizando a ata..." : "Gerar ata"}
+            {carregando ? <Loader2 className="animate-spin" /> : <Sparkles />} {carregando ? t.gerando : t.gerar}
           </Button>
         </Secao>
 
         {itens && (
-          <Secao n="3" titulo="Revisar e baixar">
+          <Secao n="3" titulo={t.revisar}>
             {(alertas.length > 0 || semPrazo > 0) && (
               <div className="mb-4 rounded-md border border-accent bg-pending p-4 text-sm text-pending-foreground">
-                <p className="mb-1 font-semibold">Confirme antes de enviar:</p>
+                <p className="mb-1 font-semibold">{t.confirme}</p>
                 <ul className="list-disc pl-5">
                   {alertas.map((a, i) => <li key={i}>{a}</li>)}
-                  {semPrazo > 0 && <li>{semPrazo} tarefa(s) pendente(s) sem prazo informado.</li>}
+                  {semPrazo > 0 && <li>{t.semPrazo(semPrazo)}</li>}
                 </ul>
                 {semPrazo > 0 && (
                   <Button variant="outline" size="sm" className="mt-3" onClick={aplicarPrazoPadrao}>
-                    <CalendarClock /> Aplicar prazo padrão (1 semana)
+                    <CalendarClock /> {t.aplicarPrazo}
                   </Button>
                 )}
               </div>
@@ -221,8 +237,8 @@ function Index() {
 
             <Tabs defaultValue="tabela">
               <TabsList>
-                <TabsTrigger value="tabela">Colunas do Excel</TabsTrigger>
-                <TabsTrigger value="texto">Texto corrido</TabsTrigger>
+                <TabsTrigger value="tabela">{t.colunas}</TabsTrigger>
+                <TabsTrigger value="texto">{t.textoCorrido}</TabsTrigger>
               </TabsList>
               <TabsContent value="tabela">
                 <div className="grid gap-2">
@@ -233,7 +249,7 @@ function Index() {
                       <div key={i} className={`rounded-md border p-2 ${topo ? "bg-topic font-semibold" : it.acao === "Tarefa Pendente" ? "bg-pending/60" : "bg-card"}`}>
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="w-12 font-mono text-xs">{it.numero}</span>
-                          <select aria-label="Ação" className="rounded-md border border-input bg-background p-2 text-sm font-normal" value={it.acao} onChange={(e) => {
+                          <select aria-label={t.acao} className="rounded-md border border-input bg-background p-2 text-sm font-normal" value={it.acao} onChange={(e) => {
                             const acao = e.target.value as Acao;
                             setItens((l) => renumerar(l!.map((x, j) => (j !== i ? x : {
                               ...x,
@@ -243,23 +259,21 @@ function Index() {
                               responsavel: acao === "Tópico" ? "Todos - All" : x.responsavel,
                             }))));
                           }}>
-                            <option>Tópico</option>
-                            <option>Informativo</option>
-                            <option>Tarefa Pendente</option>
+                            {(["Tópico", "Informativo", "Tarefa Pendente"] as Acao[]).map((a) => <option key={a} value={a}>{rotuloAcao(a)}</option>)}
                           </select>
                           {it.acao === "Tarefa Pendente" && (
-                            <Input aria-label="Prazo" value={it.prazo ?? ""} placeholder={CONFIRMAR_PRAZO} className={`w-36 font-normal ${!it.prazo ? "border-destructive" : ""}`} onChange={(e) => upd(i, { prazo: e.target.value || null })} />
+                            <Input aria-label={t.prazo} value={it.prazo ?? ""} placeholder={CONFIRMAR_PRAZO} className={`w-36 font-normal ${!it.prazo ? "border-destructive" : ""}`} onChange={(e) => upd(i, { prazo: e.target.value || null })} />
                           )}
-                          <Input aria-label="Responsável" value={it.responsavel ?? ""} placeholder="[CONFIRMAR RESPONSÁVEL]" className={`w-44 font-normal ${!it.responsavel ? "border-destructive" : ""}`} onChange={(e) => upd(i, { responsavel: e.target.value || null })} />
+                          <Input aria-label={t.responsavel} value={it.responsavel ?? ""} placeholder="[CONFIRMAR RESPONSÁVEL]" className={`w-44 font-normal ${!it.responsavel ? "border-destructive" : ""}`} onChange={(e) => upd(i, { responsavel: e.target.value || null })} />
                           <div className="ml-auto flex">
-                            <Button variant="outline" size="sm" title="Adicionar linha abaixo" onClick={() => setItens((l) => {
+                            <Button variant="outline" size="sm" title={t.addLinha} onClick={() => setItens((l) => {
                               const nova: AtaItem = { numero: topo ? `${it.numero}.1` : it.numero, assunto: "", acao: "Informativo", prazo: "N/A", responsavel: null };
                               return renumerar([...l!.slice(0, i + 1), nova, ...l!.slice(i + 1)]);
-                            })}><Plus /> Linha</Button>
-                            <Button variant="ghost" size="icon" aria-label="Remover linha" title="Remover linha" onClick={() => setItens((l) => renumerar(l!.filter((_, j) => j !== i)))}><Trash2 /></Button>
+                            })}><Plus /> {t.linha}</Button>
+                            <Button variant="ghost" size="icon" aria-label={t.removerLinha} title={t.removerLinha} onClick={() => setItens((l) => renumerar(l!.filter((_, j) => j !== i)))}><Trash2 /></Button>
                           </div>
                         </div>
-                        <Textarea aria-label="Assunto" rows={linhas} className="mt-2 min-h-0 resize-y bg-background" value={it.assunto} onChange={(e) => upd(i, { assunto: e.target.value })} />
+                        <Textarea aria-label={t.assunto} rows={linhas} className="mt-2 min-h-0 resize-y bg-background" value={it.assunto} onChange={(e) => upd(i, { assunto: e.target.value })} />
                       </div>
                     );
                   })}
@@ -267,14 +281,14 @@ function Index() {
               </TabsContent>
               <TabsContent value="texto">
                 <Textarea rows={18} value={texto} onChange={(e) => setTexto(e.target.value)} className="bg-card" />
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => { navigator.clipboard.writeText(texto); toast.success("Texto copiado."); }}>
-                  <Copy /> Copiar texto
+                <Button variant="outline" size="sm" className="mt-2" onClick={() => { navigator.clipboard.writeText(texto); toast.success(t.copiado); }}>
+                  <Copy /> {t.copiar}
                 </Button>
               </TabsContent>
             </Tabs>
 
             <Button size="lg" variant="default" className="mt-5 bg-accent text-accent-foreground hover:bg-accent/90" onClick={baixar} disabled={baixando}>
-              {baixando ? <Loader2 className="animate-spin" /> : <Download />} Baixar ata em Excel
+              {baixando ? <Loader2 className="animate-spin" /> : <Download />} {t.baixar}
             </Button>
           </Secao>
         )}
@@ -304,13 +318,13 @@ function Campo({ label, className, children }: { label: string; className?: stri
   );
 }
 
-function Fonte({ label, valor, set, onFile, placeholder }: { label: string; valor: string; set: (v: string) => void; onFile: (e: React.ChangeEvent<HTMLInputElement>) => void; placeholder: string }) {
+function Fonte({ label, anexarTxt, valor, set, onFile, placeholder }: { label: string; anexarTxt: string; valor: string; set: (v: string) => void; onFile: (e: React.ChangeEvent<HTMLInputElement>) => void; placeholder: string }) {
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between">
         <Label className="text-sm font-semibold">{label}</Label>
         <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium hover:bg-secondary">
-          <FileUp className="size-3.5" /> Anexar .txt / .docx
+          <FileUp className="size-3.5" /> {anexarTxt}
           <input type="file" multiple accept=".txt,.md,.docx,.vtt,.srt" className="hidden" onChange={onFile} />
         </label>
       </div>
