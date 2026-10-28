@@ -16,6 +16,7 @@ import {
   type Participante,
   CONFIRMAR_PRAZO,
   montarItens,
+  padronizarSiglas,
   pendenciasAbertas,
   prazoPadrao,
 } from "@/lib/ata-types";
@@ -102,7 +103,7 @@ function Index() {
         },
       });
       setItens(montarItens(r.itens));
-      setTexto(r.textoCorrido);
+      setTexto(padronizarSiglas(r.textoCorrido));
       setAlertas(r.alertas);
       toast.success("Ata organizada. Revise antes de baixar.");
     } catch (err) {

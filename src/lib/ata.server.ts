@@ -32,6 +32,8 @@ REGRAS OBRIGATÓRIAS
 - Informativo: prazo "N/A"; responsavel = quem falou (primeiro nome, como nas anotações).
 - Tarefa Pendente: prazo no formato dd/mm/aaaa se foi informado; se NÃO foi informado, prazo null (nunca invente). responsavel = quem executará; se não estiver claro, null.
 - Escreva no estilo formal da empresa, em terceira pessoa e no pretérito: "Paul informou que...", "Fábio solicitou a Paul que...", "Paul confirmou que enviará...".
+- Melhore o português das anotações: corrija gramática, ortografia e pontuação, deixando o texto profissional, claro e objetivo, sem distorcer o sentido.
+- Escreva sempre em MAIÚSCULAS as siglas: CFTI, ORCA, FGA, SADA, HS, VT-SA, VT-DE (ex.: "HS-Negócios", "Grupo SADA").
 - Preserve exatamente nomes de pessoas, empresas, equipamentos, números de unidades (#51, #61), termos técnicos e siglas.
 - Nunca invente informações, decisões, responsáveis ou prazos. Não altere o sentido. Evite repetições excessivas.
 - textoCorrido: a ata em texto corrido, em parágrafos por tópico, para revisão de clareza e fidelidade.
