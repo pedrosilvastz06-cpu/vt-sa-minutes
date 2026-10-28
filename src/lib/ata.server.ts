@@ -2,11 +2,13 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { NoObjectGeneratedError, Output, streamText } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayRunIdFetch } from "./ai/run-id";
+import { ordenarPelaOrigem, textoNaOrdem } from "./ata-order";
 
 const schema = z.object({
   itens: z.array(
     z.object({
       numero: z.string(),
+      linhaOrigem: z.number(),
       assunto: z.string(),
       acao: z.enum(["Tópico", "Informativo", "Tarefa Pendente"]),
       prazo: z.string().nullable(),
@@ -17,7 +19,11 @@ const schema = z.object({
   alertas: z.array(z.string()),
 });
 
-export type GerarResultado = z.infer<typeof schema>;
+export type GerarResultado = {
+  itens: import("./ata-types").AtaItem[];
+  textoCorrido: string;
+  alertas: string[];
+};
 
 const INSTRUCOES = `Você organiza atas de reunião em português do Brasil para a equipe comercial da HS-Negócios / VetterTec Brasil (soluções industriais de secagem, desidratação mecânica e evaporação).
 
@@ -27,6 +33,8 @@ REGRAS OBRIGATÓRIAS
 - NÃO inclua "Abertura" nem "Encerramento": o sistema adiciona automaticamente. Comece a numeração dos tópicos em 2.
 - COMPLETUDE (prioridade máxima): TODA informação, frase, pergunta, resposta, decisão, número, data e tarefa das anotações deve aparecer na ata. Não resuma, não omita, não descarte nada por parecer pouco importante. Antes de responder, confira linha por linha das anotações se cada uma virou um registro. Se uma linha tiver mais de um fato, crie um registro para cada.
 - Mantenha EXATAMENTE a ordem em que os assuntos aparecem nas anotações (ordem cronológica anotada). Não reordene, não agrupe assuntos de partes diferentes e não mova registros entre tópicos. Cada novo assunto nas anotações vira um novo tópico na mesma sequência.
+- ORIGEM OBRIGATÓRIA: as linhas das anotações estão identificadas por [L1], [L2], etc. Para CADA registro e tópico, preencha linhaOrigem com o número da linha que originou aquele fato. Nunca invente a posição nem use a numeração da ata como origem. Fatos distintos da mesma linha mantêm a ordem textual. Não junte fatos de linhas não consecutivas num único registro.
+- Se um assunto reaparecer depois de outro, abra NOVO tópico naquele ponto, mesmo que tenha o mesmo título: A → B → A permanece A → B → A, nunca A → A → B. Datas e prazos citados não são critérios de ordenação. A transcrição apenas esclarece os registros das anotações; informações complementares ficam ancoradas na linha relacionada, sem deslocar a fonte principal.
 - Numeração hierárquica: tópico "2"; registros "2.1", "2.2"; respostas/desdobramentos "2.1.1", "2.1.2".
 - Cada tópico (numero sem ponto) tem acao "Tópico", prazo "N/A", responsavel "Todos - All" e assunto no formato "Título em Português - Title in English", com a inicial de cada palavra em maiúscula (exceto artigos/preposições), ex.: "Pedido de Compra da Unidade #71 - Purchase Order for Unit #71".
 - Registros: acao "Informativo" (algo dito, informado, decidido) ou "Tarefa Pendente" (alguém se comprometeu a fazer algo).
@@ -58,11 +66,12 @@ export async function gerarAta(input: {
     fetch: runIdFetch.fetch,
   });
 
+  const linhas = input.anotacoes.split(/\r?\n/);
   const prompt = `Data da reunião: ${input.dataReuniao || "não informada"}
 Participantes: ${input.participantes || "não informados"}
 
 === ANOTAÇÕES (fonte principal) ===
-${input.anotacoes}
+${linhas.map((linha, i) => `[L${i + 1}] ${linha}`).join("\n")}
 
 === TRANSCRIÇÃO (complementar) ===
 ${input.transcricao || "(sem transcrição)"}`;
@@ -85,7 +94,9 @@ ${input.transcricao || "(sem transcrição)"}`;
   } as Parameters<typeof streamText>[0]);
 
   try {
-    return (await result.output) as GerarResultado;
+    const resposta = await result.output as z.infer<typeof schema>;
+    const itens = ordenarPelaOrigem(resposta.itens, linhas.length);
+    return { itens, textoCorrido: textoNaOrdem(itens), alertas: resposta.alertas };
   } catch (e) {
     if (NoObjectGeneratedError.isInstance(e)) {
       throw new Error("A IA não conseguiu organizar a ata. Revise as anotações e tente novamente.");

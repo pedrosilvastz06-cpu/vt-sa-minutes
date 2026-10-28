@@ -11,3 +11,4 @@
 
 - Atas: the Excel export fills the company template `public/modelo-ata.xlsx` in the browser (exceljs), copying styles from its example rows — never rebuild the layout from scratch, so the official template stays 100% intact.
 - Atas: AI organizes notes in `src/lib/ata.server.ts`; fixed opening/closing rows and numbering are added in code (`montarItens`), not by the AI.
+- Atas: each AI item carries its source-note line; `ata-order.ts` restores source order and splits resumed topic runs before review/export, so thematic grouping cannot override note chronology.
