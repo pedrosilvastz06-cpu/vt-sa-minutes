@@ -130,7 +130,8 @@ function Index() {
     setBaixando(true);
     try {
       const { gerarExcel } = await import("@/lib/ata-excel");
-      const blob = await gerarExcel(cab, parts.filter((p) => p.nome.trim()), itens);
+      const sig = <T extends object>(o: T): T => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, typeof v === "string" ? padronizarSiglas(v) : v])) as T;
+      const blob = await gerarExcel(sig(cab), parts.filter((p) => p.nome.trim()).map((p) => ({ ...sig(p), email: p.email })), itens.map(sig));
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = `Ata ${cab.docNumero || cab.data}.xlsx`;
