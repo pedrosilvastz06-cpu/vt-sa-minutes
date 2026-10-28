@@ -110,3 +110,15 @@ export function tituloCase(texto: string): string {
     })
     .join("");
 }
+
+/** Recomputes hierarchical numbers (1, 1.1, 1.1.1) keeping each item's depth. */
+export function renumerar(itens: AtaItem[]): AtaItem[] {
+  const cont: number[] = [];
+  return itens.map((it) => {
+    const nivel = it.acao === "Tópico" ? 1 : Math.max(2, it.numero.split(".").length);
+    cont.length = Math.min(cont.length, nivel);
+    while (cont.length < nivel) cont.push(0);
+    cont[nivel - 1]! += 1;
+    return { ...it, numero: cont.join(".") };
+  });
+}
