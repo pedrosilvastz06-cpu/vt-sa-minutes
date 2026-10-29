@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { IDIOMAS, TEXTOS, type Idioma } from "@/lib/i18n";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Download, FileUp, Loader2, Plus, Sparkles, Trash2, Copy, CalendarClock } from "lucide-react";
+import { Download, FileUp, Loader2, Plus, Sparkles, Trash2, Copy, CalendarClock, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +60,19 @@ async function lerArquivo(file: File): Promise<string> {
 function Index() {
   const gerar = useServerFn(gerarAtaFn);
   const [idioma, setIdioma] = useState<Idioma>("pt");
+  const [temaEscuro, setTemaEscuro] = useState(false);
+  useEffect(() => {
+    const temaSalvo = localStorage.getItem("tema");
+    const escuro = temaSalvo === "escuro";
+    document.documentElement.classList.toggle("dark", escuro);
+    setTemaEscuro(escuro);
+  }, []);
+  function alternarTema() {
+    const novoTemaEscuro = !document.documentElement.classList.contains("dark");
+    document.documentElement.classList.toggle("dark", novoTemaEscuro);
+    localStorage.setItem("tema", novoTemaEscuro ? "escuro" : "claro");
+    setTemaEscuro(novoTemaEscuro);
+  }
   useEffect(() => {
     const salvo = localStorage.getItem("idioma") as Idioma | null;
     if (salvo && salvo in TEXTOS) setIdioma(salvo);
@@ -166,9 +179,22 @@ function Index() {
             <h1 className="font-display text-3xl font-extrabold tracking-tight">VT-SA Minutes</h1>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <select aria-label={t.idioma} className="rounded-md border border-primary-foreground/30 bg-primary p-1.5 text-sm text-primary-foreground" value={idioma} onChange={(e) => { const v = e.target.value as Idioma; setIdioma(v); localStorage.setItem("idioma", v); }}>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={temaEscuro ? "Ativar tema claro" : "Ativar tema escuro"}
+                title={temaEscuro ? "Ativar tema claro" : "Ativar tema escuro"}
+                className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground dark:border-border dark:bg-secondary dark:text-secondary-foreground dark:hover:bg-secondary/80"
+                onClick={alternarTema}
+              >
+                {temaEscuro ? <Sun className="size-4" /> : <Moon className="size-4" />}
+              </Button>
+              <select aria-label={t.idioma} className="rounded-md border border-primary-foreground/30 bg-primary p-1.5 text-sm text-primary-foreground" value={idioma} onChange={(e) => { const v = e.target.value as Idioma; setIdioma(v); localStorage.setItem("idioma", v); }}>
               {IDIOMAS.map((l) => <option key={l.id} value={l.id}>{l.nome}</option>)}
-            </select>
+              </select>
+            </div>
             <p className="hidden max-w-xs text-right text-sm opacity-80 sm:block">{t.subtitulo}</p>
           </div>
         </div>
